@@ -1,85 +1,117 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, FlatList, StyleSheet } from 'react-native';
-import io from 'socket.io-client';
 
-const socket = io('http://localhost:3000'); // Замените на адрес вашего сервера
+const ChatScreen = () => {
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [chatId, setChatId] = useState('66b24b58641053fe837c6c14');
+  const [userId, setUserId] = useState('66b24be0d67ad9a566ad4956');
 
-const App = () => {
-    const [messages, setMessages] = useState([]);
-    const [newMessage, setNewMessage] = useState('');
-    const [userId, setUserId] = useState('000000000000000000000001'); // Хранит идентификатор пользователя
+  useEffect(() => {
+    // Загрузка чата и сообщений
+    fetchChat();
+  }, []);
 
-    useEffect(() => {
-        // Получение идентификатора пользователя (может быть получен с сервера)
-        // setUserId(Math.floor(Math.random() * 1000000)); // Заглушка для примера
-        socket.emit('join', userId); // Отправка идентификатора на сервер
+  const fetchChat = async () => {
+    try {
+      // Замените 'YOUR_CHAT_ID' на фактический ID чата
+      const response = await fetch('https://chat-backend-ke6y.onrender.com/chat_system/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ chatId: '66b24b58641053fe837c6c14' }),
+      });
+      const data = await response.json();
+      setMessages(data.messages);
+    } catch (error) {
+      console.error('Error fetching chat:', error);
+    }
+  };
 
-        // Обработка новых сообщений
-        socket.on('message', (message) => {
-            setMessages([...messages, message]);
-        });
-
-        // Очистка событий при размонтировании компонента
-        return () => {
-            socket.off('message');
-            socket.emit('disconnect1'); // Отправка сигнала о отключении
-        };
-    }, []);
-
-    const handleSendMessage = () => {
-        socket.emit('message', {
-            senderId: userId, // Отправитель сообщения
-            receiverId: '000000000000000000000002',
-            content: newMessage,
-        });
+  const sendMessage = async () => {
+    try {
+        console.log("chatID:", chatId);
+        console.log("userId:", userId);
+        console.log("newMessage:", newMessage);
+        
+      const response = await fetch('https://chat-backend-ke6y.onrender.com/chat_system/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          chatId: chatId,
+          senderId: userId,
+          content: newMessage,
+        }),
+      });
+      if (response.ok) {
+        // Обновление списка сообщений
+        fetchChat();
         setNewMessage('');
-    };
+      } else {
+        console.error('Error sending message:', response.status);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
 
-    return (
-        <View style={styles.container}>
-            <FlatList
-                data={messages}
-                keyExtractor={(item) => item._id}
-                renderItem={({ item }) => (
-                    <View style={styles.message}>
-                        <Text>{item.senderId}: {item.content}</Text>
-                    </View>
-                )}
-            />
-            <View style={styles.inputContainer}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Введите сообщение"
-                    value={newMessage}
-                    onChangeText={setNewMessage}
-                />
-                <Button title="Отправить" onPress={handleSendMessage} />
-            </View>
-        </View>
-    );
+  const renderMessage = ({ item }) => (
+    <View style={styles.messageContainer}>
+      <Text style={styles.messageText}>{item.content}</Text>
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={messages}
+        renderItem={renderMessage}
+        keyExtractor={(item) => item._id.toString()}
+      />
+
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Введите сообщение"
+          value={newMessage}
+          onChangeText={setNewMessage}
+        />
+        <Button title="Отправить" onPress={sendMessage} />
+      </View>
+    </View>
+  );
 };
+
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-    },
-    message: {
-        marginBottom: 10,
-        padding: 10,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 10,
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    input: {
-        flex: 1,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        marginRight: 10,
-    },
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  messageContainer: {
+    marginBottom: 10,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#f0f0f0',
+  },
+  messageText: {
+    fontSize: 16,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 10,
+    marginRight: 10,
+    borderRadius: 5,
+  },
 });
 
-export default App;
+export default ChatScreen;
