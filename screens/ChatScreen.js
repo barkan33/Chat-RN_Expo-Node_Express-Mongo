@@ -24,7 +24,7 @@ export const ChatScreen = () => {
 
     const getMessages = async () => {
         try {
-            console.log("chatId", chatData._id);
+            console.log("chatId", chatData);
 
             const response = await fetch(`${API_URL}/chats/messages`, {
                 method: 'PUT',
@@ -47,12 +47,11 @@ export const ChatScreen = () => {
             console.error('Get messages error:', error);
         }
     };
-    //TODO:[SyntaxError: JSON Parse error: Unexpected character: <] WTF???????????????????
     const sendMessage = async () => {
         try {
             console.log('chatData._id', chatData._id)
             console.log('newMessage', newMessage)
-            const response = await fetch(`${API_URL}/chat/messages`, {
+            const response = await fetch(`${API_URL}/chats/messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -74,6 +73,7 @@ export const ChatScreen = () => {
     };
     const isChatExist = async () => {
         try {
+            console.log('receiverId', receiverId)
             const response = await fetch(`${API_URL}/chats/chat/participants`, {
                 method: 'POST',
                 headers: {
@@ -129,25 +129,27 @@ export const ChatScreen = () => {
         if (chatData)
             getMessages();
     }, [chatData]);
-    useEffect(() => {
-        try {
-            if (isChatExist(receiverId))
-                createChat();
 
-        } catch (error) {
-            console.error(error)
-        }
-    }, []);
+    useEffect(() => {
+        if (receiverId)
+            try {
+                if (!isChatExist())
+                    createChat();
+
+            } catch (error) {
+                console.error(error)
+            }
+    }, [receiverId]);
 
     return (
         <SafeAreaView style={styles.container}>
             <FlatList
                 data={messages}
-                keyExtractor={(item) => item._id.toString()}
+                keyExtractor={(item) => item._id}
                 renderItem={({ item }) => (
                     <ChatMessage
                         message={item.content}
-                        isCurrentUser={item.senderId.toString() === userId}
+                        isCurrentUser={item.senderId != receiverId}
                     />
                 )}
             />

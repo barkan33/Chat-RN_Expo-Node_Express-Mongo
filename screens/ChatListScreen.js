@@ -19,6 +19,8 @@ import { API_URL, JWT_KEY } from "react-native-dotenv"
 export const ChatListScreen = () => {
     const [chats, setChats] = useState([]);
     const navigation = useNavigation();
+    const [userId, setUserId] = useState(null);
+    console.log("ChatListScreen");
 
     const getChats = async () => {
         try {
@@ -30,11 +32,12 @@ export const ChatListScreen = () => {
                 }
             });
 
+            const data = await response.json();
             if (response.ok) {
-                const data = await response.json();
+                console.log('data', data)
                 setChats(data.chats);
+
             } else {
-                const data = await response.json();
                 console.error('Get chats failed:', data.message);
             }
         } catch (error) {
@@ -42,31 +45,44 @@ export const ChatListScreen = () => {
         }
     };
 
-    const handleSelectChat = (chatId) => {
-        navigation.navigate('Chat', { chatId });
+    const handleSelectChat = (receiverId) => {
+        navigation.navigate('Chat', { receiverId });
     };
 
     useEffect(() => {
+        const fetchUserId = async () => {
+            const id = await AsyncStorage.getItem("USER_ID");
+            if (id) {
+                setUserId(id);
+            }
+        }
+        fetchUserId();
         getChats();
     }, []);
 
     return (
         <SafeAreaView style={styles.container}>
             <Button title="Add User" onPress={() => {
-                navigation.navigate('SearchUsers')
+                navigation.navigate('SearchUsers');
             }} />
             <Text style={styles.title}>Chats List</Text>
             <FlatList
                 data={chats}
-                keyExtractor={(item) => item._id.toString()}
-                renderItem={({ item }) => (
-                    <TouchableOpacity onPress={() => handleSelectChat(item._id.toString())}>
-                        <View style={styles.chatItem}>
-                            <Text style={styles.chatTitle}>{item.title}</Text>
-                        </View>
-                    </TouchableOpacity>
-                )}
+                keyExtractor={(item) => item._id}
+                renderItem={({ item }) => {
+
+                    let userDetails = item.userDetails;
+                    let receiver = userDetails.filter(user => user._id !== userId)[0];
+                    console.log('receiver', receiver);
+                    return (
+                        <TouchableOpacity onPress={() => handleSelectChat(receiver._id)}>
+                            <View style={styles.chatItem}>
+                                <Text style={styles.chatTitle}>{receiver.username}</Text>
+                            </View>
+                        </TouchableOpacity>
+                    )
+                }}
             />
-        </SafeAreaView>
+        </SafeAreaView >
     );
 };

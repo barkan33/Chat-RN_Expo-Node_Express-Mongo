@@ -32,9 +32,11 @@ export const LoginScreen = () => {
             if (response.ok) {
                 const data = await response.json();
                 const token = data.token;
+                const userId = data.userId;
 
                 if (JWT_KEY) {
                     await AsyncStorage.setItem(JWT_KEY, token);
+                    await AsyncStorage.setItem("USER_ID", userId);
                     navigation.navigate('ChatList');
                 } else {
                     console.error('JWT_KEY is undefined');
