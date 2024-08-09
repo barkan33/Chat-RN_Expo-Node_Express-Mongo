@@ -1,78 +1,165 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, FlatList, StyleSheet } from 'react-native';
-import io from 'socket.io-client';
+import {
+    StyleSheet,
+    View,
+    TextInput,
+    Button,
+    SafeAreaView,
+    FlatList,
+} from 'react-native';
+import styles from './Styles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ChatMessage from './ChatMessage';
+import { API_URL, JWT_KEY } from "react-native-dotenv"
+import { useRoute } from '@react-navigation/native';
 
-const socket = io('http://localhost:3000'); // Замените на адрес вашего сервера
 
-const ChatScreen = () => {
+
+export const ChatScreen = () => {
+    const route = useRoute();
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
+    const [chatData, setChatId] = useState('');
+    const [receiverId, setReceiverId] = useState(route.params.receiverId);
+
+    const getMessages = async () => {
+        try {
+            console.log("chatId", chatData._id);
+
+            const response = await fetch(`${API_URL}/chats/messages`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json',
+                    Authorization: `Bearer ${await AsyncStorage.getItem(JWT_KEY)}`,
+                },
+                body: JSON.stringify({ chatId: chatData._id }),
+            });
+
+            const data = await response.json();
+            console.log(data);
+            if (response.ok) {
+                setMessages(data.messages);
+            } else {
+                console.error('Get messages failed:', data);
+            }
+        } catch (error) {
+            console.error('Get messages error:', error);
+        }
+    };
+    //TODO:[SyntaxError: JSON Parse error: Unexpected character: <] WTF???????????????????
+    const sendMessage = async () => {
+        try {
+            console.log('chatData._id', chatData._id)
+            console.log('newMessage', newMessage)
+            const response = await fetch(`${API_URL}/chat/messages`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${await AsyncStorage.getItem(JWT_KEY)}`,
+                },
+                body: JSON.stringify({ chatId: chatData._id, content: newMessage }),
+            });
+
+            if (response.ok) {
+                setNewMessage('');
+                getMessages();
+            } else {
+                const data = await response.json();
+                console.error('Send message failed:', data.message);
+            }
+        } catch (error) {
+            console.error('Send message error:', error);
+        }
+    };
+    const isChatExist = async () => {
+        try {
+            const response = await fetch(`${API_URL}/chats/chat/participants`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${await AsyncStorage.getItem(JWT_KEY)}`,
+                },
+                body: JSON.stringify({ receiverId }),
+            });
+            const data = await response.json();
+
+            console.log("isChatExist ", data);
+            if (response.ok) {
+                setChatId(data.chatId);
+                return true
+            }
+            if (response.status === 404)
+                return false
+
+            else {
+                throw new Error('Check chat failed:', data);
+            }
+        }
+        catch (error) {
+            console.error('Check chat error:', error);
+        }
+    }
+    const createChat = async () => {
+        try {
+            const response = await fetch(`${API_URL}/chats/newchat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${await AsyncStorage.getItem(JWT_KEY)}`,
+                },
+                body: JSON.stringify({ receiverId }),
+            });
+
+            if (response.ok) {
+
+                const newChatId = await response.json();
+                console.log(newChatId);
+                return newChatId;
+            }
+
+        } catch (error) {
+            console.error('Check chat error:', error);
+            return false
+        }
+    }
 
     useEffect(() => {
-        socket.on('message', (message) => {
-            setMessages([...messages, message]);
-        });
+        console.log("chatData", chatData);
+        if (chatData)
+            getMessages();
+    }, [chatData]);
+    useEffect(() => {
+        try {
+            if (isChatExist(receiverId))
+                createChat();
 
-        return () => {
-            socket.off('message');
-        };
-    }, [messages]);
-
-    const handleSendMessage = () => {
-        socket.emit('message', {
-            sender: 'User', // Замените на имя пользователя
-            receiver: 'Server', // Замените на получателя
-            content: newMessage,
-        });
-        setNewMessage('');
-    };
+        } catch (error) {
+            console.error(error)
+        }
+    }, []);
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <FlatList
                 data={messages}
-                keyExtractor={(item) => item._id}
+                keyExtractor={(item) => item._id.toString()}
                 renderItem={({ item }) => (
-                    <View style={styles.message}>
-                        <Text>{item.sender}: {item.content}</Text>
-                    </View>
+                    <ChatMessage
+                        message={item.content}
+                        isCurrentUser={item.senderId.toString() === userId}
+                    />
                 )}
             />
             <View style={styles.inputContainer}>
                 <TextInput
-                    style={styles.input}
-                    placeholder="Введите сообщение"
-                    value={newMessage}
+                    style={[styles.input, { flex: 1 }]}
+                    placeholder="Enter a message"
                     onChangeText={setNewMessage}
+                    value={newMessage}
                 />
-                <Button title="Отправить" onPress={handleSendMessage} />
+                <Button title="Send" onPress={sendMessage} />
             </View>
-        </View>
+        </SafeAreaView>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-    },
-    message: {
-        marginBottom: 10,
-        padding: 10,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 10,
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    input: {
-        flex: 1,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        marginRight: 10,
-    },
-});
-
-export default ChatScreen;
