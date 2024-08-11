@@ -7,6 +7,17 @@ import { ChatListScreen } from './screens/ChatListScreen';
 import { SearchUsersScreen } from './screens/SearchUsersScreen';
 import { ChatScreen } from './screens/ChatScreen';
 
+
+import { initializeApp } from "firebase/app";
+import { getApps, getApp } from 'firebase/app';
+import { FIREBASE_CONFIG } from "react-native-dotenv"
+
+const firebaseConfig = FIREBASE_CONFIG;
+
+if (getApps().length === 0) {
+    initializeApp(firebaseConfig);
+}
+
 const Stack = createNativeStackNavigator();
 
 const App = () => {

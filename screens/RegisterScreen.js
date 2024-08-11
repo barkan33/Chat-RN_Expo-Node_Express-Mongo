@@ -6,6 +6,7 @@ import {
     SafeAreaView,
     View,
     TouchableOpacity,
+    ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -14,6 +15,8 @@ import { styles, formStyles } from './Styles';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from '@rneui/base';
 
+import { getApp } from "firebase/app";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 
 export const RegisterScreen = () => {
@@ -23,9 +26,12 @@ export const RegisterScreen = () => {
     const [username, setUsername] = useState('');
     const [showError, setshowError] = useState('');
     const [avatarUri, setAvatarUri] = useState(null);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const navigation = useNavigation();
 
     const handleRegister = async () => {
+        setUploading(true);
         if (password !== confirmPassword) {
             setshowError('Passwords do not match');
             return;
@@ -39,7 +45,7 @@ export const RegisterScreen = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email, password, username, avatarUri }),
+                body: JSON.stringify({ email, password, username }),
             });
 
             const data = await response.json();
@@ -51,6 +57,9 @@ export const RegisterScreen = () => {
                 if (JWT_KEY) {
                     await AsyncStorage.setItem(JWT_KEY, token);
                     await AsyncStorage.setItem("USER_ID", userId);
+                    if (avatarUri) {
+                        await uploadImage(avatarUri, userId);
+                    }
                     navigation.navigate('ChatList');
                 } else {
                     console.error('JWT_KEY is undefined');
@@ -60,6 +69,8 @@ export const RegisterScreen = () => {
             }
         } catch (error) {
             console.error('Registration error:', error);
+        } finally {
+            setUploading(false);
         }
     };
     const pickImage = async () => {
@@ -78,18 +89,58 @@ export const RegisterScreen = () => {
             }
         }
     };
+    const uploadImage = async (uri, userId) => {
+        setUploadingAvatar(true);
+        try {
+            const storage = getStorage(getApp(), "gs://fir-demo-8cec0.appspot.com");
+            const blob = await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.onload = function () {
+                    resolve(xhr.response);
+                };
+                xhr.onerror = function (e) {
+                    console.log(e);
+                    reject(new TypeError("Network request failed"));
+                };
+                xhr.responseType = "blob";
+                xhr.open("GET", uri, true);
+                xhr.send(null);
+            });
 
+            const imageRef = ref(storage, `user-avatars/${userId}`);
+            await uploadBytes(imageRef, blob);
+
+            const downloadURL = await getDownloadURL(imageRef);
+            const response = await fetch(`${API_URL}/users/avatar`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${await AsyncStorage.getItem(JWT_KEY)}`,
+                },
+                body: JSON.stringify({ avatarURL: downloadURL }),
+            });
+            if (!response.ok) {
+                const data = await response.json();
+
+                console.log('response', data.message)
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+        } finally {
+            setUploadingAvatar(false);
+        }
+    };
 
     return (
         <SafeAreaView style={formStyles.container}>
             <View style={formStyles.formContainer}>
                 <Text style={styles.title}>Registration</Text>
-
-                {avatarUri && (
+                {uploadingAvatar ? (<ActivityIndicator size="large" color="#007bff" />) : (avatarUri && (
                     <View style={formStyles.avatarContainer}>
                         <Image source={{ uri: avatarUri }} style={formStyles.avatar} />
                     </View>
-                )}
+                ))}
+
 
                 <View style={formStyles.inputContainer}>
                     <TextInput
@@ -134,11 +185,12 @@ export const RegisterScreen = () => {
                     />
                 </View>
 
-                <TouchableOpacity onPress={pickImage} style={formStyles.chooseAvatarButton}>
+                <TouchableOpacity disabled={email.length == 0} onPress={pickImage} style={formStyles.chooseAvatarButton}>
                     <Text style={formStyles.chooseAvatarText}>Choose Avatar</Text>
                 </TouchableOpacity>
 
-                <Button title="Register" onPress={handleRegister} style={formStyles.loginButton} />
+                {uploading ? (<ActivityIndicator size="large" color="#007bff" />) : (<Button disabled={uploading} title="Register" onPress={handleRegister} style={formStyles.loginButton} />)}
+
                 <Text style={formStyles.registerText}>Already have an account? <Text style={formStyles.registerLink} onPress={() => navigation.navigate('Login')}>Sign In</Text></Text>
 
                 <Text style={[formStyles.registerText, { color: 'red', display: showError, }]}>{showError}</Text>
