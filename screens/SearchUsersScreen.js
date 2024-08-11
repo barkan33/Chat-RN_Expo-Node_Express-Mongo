@@ -9,7 +9,7 @@ import {
     TouchableOpacity,
     SafeAreaView,
 } from 'react-native';
-import styles from './Styles';
+import {styles} from './Styles';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL, JWT_KEY } from "react-native-dotenv"

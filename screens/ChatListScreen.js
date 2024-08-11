@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import {
-    StyleSheet,
     Text,
     View,
     FlatList,
     TouchableOpacity,
     SafeAreaView,
-    Button,
 } from 'react-native';
-import styles from './Styles';
+import {styles} from './Styles';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL, JWT_KEY } from "react-native-dotenv"
+import { FAB } from '@rneui/themed';
 
 
 
@@ -45,8 +44,8 @@ export const ChatListScreen = () => {
         }
     };
 
-    const handleSelectChat = (receiverId) => {
-        navigation.navigate('Chat', { receiverId });
+    const handleSelectChat = (receiver) => {
+        navigation.navigate('Chat', { receiver });
     };
 
     useEffect(() => {
@@ -62,9 +61,6 @@ export const ChatListScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Button title="Add User" onPress={() => {
-                navigation.navigate('SearchUsers');
-            }} />
             <Text style={styles.title}>Chats List</Text>
             <FlatList
                 data={chats}
@@ -75,13 +71,25 @@ export const ChatListScreen = () => {
                     let receiver = userDetails.filter(user => user._id !== userId)[0];
                     console.log('receiver', receiver);
                     return (
-                        <TouchableOpacity onPress={() => handleSelectChat(receiver._id)}>
+                        <TouchableOpacity onPress={() => handleSelectChat(receiver)}>
                             <View style={styles.chatItem}>
                                 <Text style={styles.chatTitle}>{receiver.username}</Text>
                             </View>
                         </TouchableOpacity>
                     )
                 }}
+            />
+            <FAB
+                onPress={() => {
+                    navigation.navigate('SearchUsers');
+                }}
+                style={{ width: "100%", margin: 20 }}
+                placement="right"
+                color="#007bff"
+                size="large"
+                visible
+                overlayColor="#007bff"
+                icon={{ name: "add", color: "#fff" }}
             />
         </SafeAreaView >
     );

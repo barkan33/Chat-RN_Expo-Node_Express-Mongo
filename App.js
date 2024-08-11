@@ -13,9 +13,9 @@ const App = () => {
     return (
         <NavigationContainer>
             <Stack.Navigator>
-                <Stack.Screen name="Login" component={LoginScreen} />
-                <Stack.Screen name="Register" component={RegisterScreen} />
-                <Stack.Screen name="ChatList" component={ChatListScreen} />
+                <Stack.Screen options={{ headerShown: false }} name="Login" component={LoginScreen} />
+                <Stack.Screen options={{ headerShown: false }} name="Register" component={RegisterScreen} />
+                <Stack.Screen options={{ headerShown: false }} name="ChatList" component={ChatListScreen} />
                 <Stack.Screen name="SearchUsers" component={SearchUsersScreen} />
                 <Stack.Screen name="Chat" component={ChatScreen} />
             </Stack.Navigator>
