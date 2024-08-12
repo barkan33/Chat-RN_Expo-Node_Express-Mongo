@@ -9,7 +9,7 @@ import { ChatScreen } from './screens/ChatScreen';
 
 
 import { initializeApp } from "firebase/app";
-import { getApps, getApp } from 'firebase/app';
+import { getApps } from 'firebase/app';
 import { FIREBASE_CONFIG } from "react-native-dotenv"
 
 const firebaseConfig = FIREBASE_CONFIG;

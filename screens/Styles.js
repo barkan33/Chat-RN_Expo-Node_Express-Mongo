@@ -17,20 +17,23 @@ export const styles = StyleSheet.create({
         marginBottom: 10,
     },
     userItem: {
-        padding: 10,
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 15,
+        padding: 15,
         borderBottomWidth: 1,
         borderBottomColor: '#ccc',
     },
     userName: {
-        fontSize: 18,
+        fontSize: 22,
     },
-    chatItem: {
-        padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
-    },
-    chatTitle: {
-        fontSize: 18,
+    chatItemAvatar: {
+        width: 60,
+        height: 60,
+        aspectRatio: 1,
+        resizeMode: 'contain',
+        borderRadius: 50,
     },
     addButtonContainer: {
         position: 'absolute',
@@ -42,8 +45,11 @@ export const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 10,
     },
-    header: {
+    chatheader: {
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: '#ffffff',
+        gap: 15,
         padding: 10,
         marginBottom: 10,
         tintColor: '#000000',

@@ -7,11 +7,12 @@ import {
     FlatList,
     Text,
 } from 'react-native';
-import {styles} from './Styles';
+import { styles } from './Styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ChatMessage from './ChatMessage';
 import { API_URL, JWT_KEY } from "react-native-dotenv"
 import { useRoute } from '@react-navigation/native';
+import { Image } from '@rneui/base';
 
 
 
@@ -81,8 +82,11 @@ export const ChatScreen = () => {
                 setChatId(data.chatId);
                 return true
             }
-            if (response.status === 404)
+            if (response.status === 404) {
+                console.log('return false')
                 return false
+
+            }
 
             else {
                 throw new Error('Check chat failed:', data);
@@ -93,7 +97,10 @@ export const ChatScreen = () => {
         }
     }
     const createChat = async () => {
+        console.log('createChat', receiver)
+
         try {
+
             const response = await fetch(`${API_URL}/chats/newchat`, {
                 method: 'POST',
                 headers: {
@@ -104,7 +111,6 @@ export const ChatScreen = () => {
             });
 
             if (response.ok) {
-
                 const newChatId = await response.json();
                 return newChatId;
             }
@@ -116,7 +122,6 @@ export const ChatScreen = () => {
     }
 
     useEffect(() => {
-        console.log("receiver", receiver);
         if (chatData)
             getMessages();
     }, [chatData]);
@@ -124,17 +129,20 @@ export const ChatScreen = () => {
     useEffect(() => {
         if (receiver._id)
             try {
-                if (!isChatExist())
+                console.log('isChatExist()', isChatExist())//WTF?
+                if (isChatExist() != true) {
                     createChat();
+                }
 
             } catch (error) {
                 console.error(error)
             }
-    }, [receiver]);
+    }, []);
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
+            <View style={styles.chatheader}>
+                <Image style={styles.chatItemAvatar} source={{ uri: receiver.avatarURL ? receiver.avatarURL : "https://aui.atlassian.com/aui/9.5/docs/images/avatar-person.svg" }} />
                 <Text style={styles.headerTitle}>{receiver.username}</Text>
             </View>
             <FlatList

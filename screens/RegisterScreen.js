@@ -14,6 +14,7 @@ import { API_URL, JWT_KEY } from "react-native-dotenv"
 import { styles, formStyles } from './Styles';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from '@rneui/base';
+import * as Crypto from 'expo-crypto';
 
 import { getApp } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -40,19 +41,20 @@ export const RegisterScreen = () => {
             setshowError('');
         }
         try {
+            let encryptedPassword = await encryptPass(password)
             const response = await fetch(`${API_URL}/users/registration`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email, password, username }),
+                body: JSON.stringify({ email, password: encryptedPassword, username }),
             });
 
             const data = await response.json();
             if (response.ok) {
                 setshowError('');
                 const token = data.token;
-                const userId = data.userId;
+                const userId = data.insertedId;
 
                 if (JWT_KEY) {
                     await AsyncStorage.setItem(JWT_KEY, token);
@@ -130,7 +132,11 @@ export const RegisterScreen = () => {
             setUploadingAvatar(false);
         }
     };
-
+    const encryptPass = async (pass) => {
+        const digest = await Crypto.digestStringAsync(
+            Crypto.CryptoDigestAlgorithm.SHA256, pass);
+        return digest;
+    }
     return (
         <SafeAreaView style={formStyles.container}>
             <View style={formStyles.formContainer}>

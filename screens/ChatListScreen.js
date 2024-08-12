@@ -6,20 +6,20 @@ import {
     TouchableOpacity,
     SafeAreaView,
 } from 'react-native';
-import { styles } from './Styles';
+import { formStyles, styles } from './Styles';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL, JWT_KEY } from "react-native-dotenv"
 import { FAB } from '@rneui/themed';
+import { Image } from '@rneui/base';
 
 
 
-
+//Show avater
 export const ChatListScreen = () => {
     const [chats, setChats] = useState([]);
     const navigation = useNavigation();
     const [userId, setUserId] = useState(null);
-    console.log("ChatListScreen");
 
     const getChats = async () => {
         try {
@@ -33,7 +33,6 @@ export const ChatListScreen = () => {
 
             const data = await response.json();
             if (response.ok) {
-                console.log('data', data)
                 setChats(data.chats);
 
             } else {
@@ -72,8 +71,9 @@ export const ChatListScreen = () => {
                     console.log('receiver', receiver);
                     return (
                         <TouchableOpacity onPress={() => handleSelectChat(receiver)}>
-                            <View style={styles.chatItem}>
-                                <Text style={styles.chatTitle}>{receiver.username}</Text>
+                            <View style={styles.userItem}>
+                                <Image style={styles.chatItemAvatar} source={{ uri: receiver.avatarURL ? receiver.avatarURL : "https://aui.atlassian.com/aui/9.5/docs/images/avatar-person.svg" }} />
+                                <Text style={styles.userName}>{receiver.username}</Text>
                             </View>
                         </TouchableOpacity>
                     )

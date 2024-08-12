@@ -9,10 +9,11 @@ import {
     TouchableOpacity,
     SafeAreaView,
 } from 'react-native';
-import {styles} from './Styles';
+import { styles } from './Styles';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL, JWT_KEY } from "react-native-dotenv"
+import { Image } from '@rneui/base';
 
 
 
@@ -46,8 +47,8 @@ export const SearchUsersScreen = () => {
         }
     };
 
-    const handleSelectUser = (receiverId) => {
-        navigation.navigate('Chat', { receiverId });
+    const handleSelectUser = (receiver) => {
+        navigation.navigate('Chat', { receiver });
     };
 
     return (
@@ -65,9 +66,10 @@ export const SearchUsersScreen = () => {
                 keyExtractor={(item) => item._id}
                 renderItem={({ item }) => (
                     <TouchableOpacity
-                        onPress={() => handleSelectUser(item._id)}
+                        onPress={() => handleSelectUser(item)}
                     >
                         <View style={styles.userItem}>
+                            <Image style={styles.chatItemAvatar} source={{ uri: item.avatarURL ? item.avatarURL : "https://aui.atlassian.com/aui/9.5/docs/images/avatar-person.svg" }} />
                             <Text style={styles.userName}>{item.username}</Text>
                         </View>
                     </TouchableOpacity>

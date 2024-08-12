@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL, JWT_KEY } from "react-native-dotenv";
 import { styles, formStyles } from './Styles';
+import { Image } from '@rneui/themed';
 
 
 
