@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     View,
     TextInput,
@@ -6,6 +6,7 @@ import {
     SafeAreaView,
     FlatList,
     Text,
+    TouchableOpacity,
 } from 'react-native';
 import { styles } from './Styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,7 +14,7 @@ import ChatMessage from './ChatMessage';
 import { API_URL, JWT_KEY } from "react-native-dotenv"
 import { useRoute } from '@react-navigation/native';
 import { Image } from '@rneui/base';
-
+import Icon from 'react-native-vector-icons/Ionicons';
 
 
 export const ChatScreen = () => {
@@ -22,6 +23,7 @@ export const ChatScreen = () => {
     const [newMessage, setNewMessage] = useState('');
     const [chatData, setChatId] = useState('');
     const [receiver, setReceiver] = useState(route.params.receiver);
+    const flatListRef = useRef(null);
 
     const getMessages = async () => {
         try {
@@ -47,6 +49,7 @@ export const ChatScreen = () => {
     };
     const sendMessage = async () => {
         try {
+            if (newMessage === '') return;
             const response = await fetch(`${API_URL}/chats/messages`, {
                 method: 'POST',
                 headers: {
@@ -59,6 +62,7 @@ export const ChatScreen = () => {
             if (response.ok) {
                 setNewMessage('');
                 getMessages();
+                flatListRef.current.scrollToEnd({ animated: true });
             } else {
                 const data = await response.json();
                 console.error('Send message failed:', data.message);
@@ -83,9 +87,7 @@ export const ChatScreen = () => {
                 return true
             }
             if (response.status === 404) {
-                console.log('return false')
                 return false
-
             }
 
             else {
@@ -97,10 +99,7 @@ export const ChatScreen = () => {
         }
     }
     const createChat = async () => {
-        console.log('createChat', receiver)
-
         try {
-
             const response = await fetch(`${API_URL}/chats/newchat`, {
                 method: 'POST',
                 headers: {
@@ -117,7 +116,6 @@ export const ChatScreen = () => {
 
         } catch (error) {
             console.error('Check chat error:', error);
-            return false
         }
     }
 
@@ -146,7 +144,10 @@ export const ChatScreen = () => {
                 <Text style={styles.headerTitle}>{receiver.username}</Text>
             </View>
             <FlatList
+                ref={flatListRef}
                 data={messages}
+                inverted
+                contentContainerStyle={{ flexDirection: 'column-reverse' }}
                 keyExtractor={(item) => item._id}
                 renderItem={({ item }) => (
                     <ChatMessage
@@ -162,7 +163,12 @@ export const ChatScreen = () => {
                     onChangeText={setNewMessage}
                     value={newMessage}
                 />
-                <Button title="Send" onPress={sendMessage} />
+                <TouchableOpacity
+                    style={styles.sendButton} // Add send button style
+                    onPress={sendMessage}
+                >
+                    <Icon name="send" size={24} color="white" />
+                </TouchableOpacity>
             </View>
         </SafeAreaView>
     );

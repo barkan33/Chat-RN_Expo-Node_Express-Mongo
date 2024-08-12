@@ -14,7 +14,6 @@ export const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#ccc',
         padding: 10,
-        marginBottom: 10,
     },
     userItem: {
         flex: 1,
@@ -43,6 +42,7 @@ export const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         marginTop: 10,
     },
     chatheader: {
@@ -60,6 +60,14 @@ export const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         color: '#000000'
+    },
+    sendButton: {
+        backgroundColor: '#007bff', // Or your preferred color
+        borderRadius: 25, // Make the button round
+        padding: 13,
+        marginLeft: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });
 
