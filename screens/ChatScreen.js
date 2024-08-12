@@ -138,7 +138,7 @@ export const ChatScreen = () => {
     }, []);
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { marginTop: 5 }]}>
             <View style={styles.chatheader}>
                 <Image style={styles.chatItemAvatar} source={{ uri: receiver.avatarURL ? receiver.avatarURL : "https://aui.atlassian.com/aui/9.5/docs/images/avatar-person.svg" }} />
                 <Text style={styles.headerTitle}>{receiver.username}</Text>
